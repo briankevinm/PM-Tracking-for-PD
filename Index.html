@@ -1,0 +1,2632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilot Rollout Logistics & Administration Plan</title>
+<meta name="description" content="Phase 1 Pilot Gantt chart — Cedars-Sinai Professional Development Series">
+<style>
+/* ====================================================================
+   PILOT ROLLOUT GANTT — STYLESHEET
+   --------------------------------------------------------------------
+   Design intent: executive-grade, refined minimalism. Neutral surface,
+   subtle grid, distinctive phase colors, restrained typography.
+   All sizing token-driven via CSS custom properties so resize
+   reflow is cheap (one --pxPerDay change ripples through layout).
+   ==================================================================== */
+
+:root {
+  /* Type ramp ----------------------------------------------------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Neutral surface ---------------------------------------------- */
+  --bg: #fafaf9;            /* page background — warm off-white */
+  --surface: #ffffff;       /* cards / chart canvas */
+  --surface-2: #f5f5f4;     /* subtle alt — phase header rows */
+  --border: #e7e5e4;        /* hairline */
+  --border-strong: #d6d3d1;
+  --grid: #efedeb;          /* timeline gridlines */
+  --grid-strong: #e1ddd9;   /* Monday gridlines */
+
+  /* Ink ---------------------------------------------------------- */
+  --ink: #1c1917;           /* primary text */
+  --ink-2: #44403c;         /* secondary */
+  --ink-3: #78716c;         /* tertiary / labels */
+  --ink-4: #a8a29e;         /* faint */
+
+  /* Phase palette — WCAG AA against white ------------------------ */
+  --phase-1: #0d9488;       /* teal-600 — Setup */
+  --phase-1-soft: #ccfbf1;
+  --phase-2: #d97706;       /* amber-600 — Content Dev */
+  --phase-2-soft: #fef3c7;
+  --phase-3: #7c3aed;       /* violet-600 — Review */
+  --phase-3-soft: #ede9fe;
+  --phase-4: #16a34a;       /* green-600 — Pilot */
+  --phase-4-soft: #dcfce7;
+
+  /* Status -------------------------------------------------------- */
+  --ok: #15803d;
+  --ok-bg: #dcfce7;
+  --warn: #b45309;
+  --warn-bg: #fef3c7;
+  --bad: #b91c1c;
+  --bad-bg: #fee2e2;
+
+  /* Critical path ------------------------------------------------- */
+  --cp: #dc2626;
+
+  /* Today line ---------------------------------------------------- */
+  --today: #0f172a;
+
+  /* Layout tokens ------------------------------------------------- */
+  --pxPerDay: 22;           /* JS-managed; bar widths derive from this */
+  --task-panel-w: 340px;
+  --row-h: 50px;            /* tall enough for milestone date labels below the diamond without bleeding into next phase header */
+  --phase-row-h: 32px;
+  --bar-h: 26px;
+  --header-h: 56px;
+
+  /* Elevation ----------------------------------------------------- */
+  --shadow-1: 0 1px 2px rgba(28,25,23,0.04), 0 1px 1px rgba(28,25,23,0.02);
+  --shadow-2: 0 4px 12px rgba(28,25,23,0.06), 0 2px 4px rgba(28,25,23,0.04);
+  --shadow-3: 0 12px 32px rgba(28,25,23,0.10), 0 4px 8px rgba(28,25,23,0.04);
+
+  --radius-1: 4px;
+  --radius-2: 6px;
+  --radius-3: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+/* ----- Top app bar ------------------------------------------------- */
+
+.app-shell {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 32px 32px 64px;
+}
+
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-title h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.app-title p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.app-meta {
+  text-align: right;
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.app-meta strong {
+  display: block;
+  color: var(--ink-2);
+  font-weight: 500;
+  margin-bottom: 2px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+/* ----- Dashboard KPIs --------------------------------------------- */
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+@media (max-width: 1100px) {
+  .dashboard { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-1);
+}
+
+.kpi .v {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.kpi .v.muted { color: var(--ink-3); }
+.kpi .v.ok { color: var(--ok); }
+.kpi .v.warn { color: var(--warn); }
+.kpi .v.bad { color: var(--bad); }
+
+.kpi .l {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.kpi .sub {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+/* ----- Toolbar ---------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-1);
+}
+
+.toolbar .spacer { flex: 1; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-1);
+  color: var(--ink-2);
+  font-weight: 500;
+  font-size: 13px;
+  transition: background .12s, border-color .12s, color .12s;
+}
+
+.btn:hover { background: var(--surface-2); color: var(--ink); }
+.btn:focus-visible {
+  outline: 2px solid var(--phase-3);
+  outline-offset: 1px;
+}
+
+.btn.primary {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.btn.primary:hover { background: #000; color: #fff; }
+
+.btn.danger { color: var(--bad); border-color: #f3c0c0; }
+.btn.danger:hover { background: var(--bad-bg); }
+
+.btn-icon {
+  width: 14px; height: 14px;
+  display: inline-block;
+}
+
+/* segmented view toggle */
+/* ----- Chart -------------------------------------------------------- */
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.chart-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: var(--task-panel-w) auto;
+  min-width: 100%;
+  position: relative;
+}
+
+/* the today line overlay sits inside .chart-grid, positioned in the
+   right column area; calc uses --task-panel-w + dayOffset px */
+.today-overlay {
+  position: absolute;
+  left: var(--task-panel-w);
+  top: var(--header-h);
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 6;
+  overflow: hidden;
+}
+
+/* sticky task panel column */
+.task-col-head, .timeline-head {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.task-col-head {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  border-right: 1px solid var(--border);
+  z-index: 6;
+  background: var(--surface);
+}
+
+.timeline-head {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.timeline-head .ticks {
+  position: relative;
+  height: 100%;
+}
+
+.timeline-head .tick {
+  position: absolute;
+  top: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 6px;
+  font-size: 11px;
+  color: var(--ink-3);
+  border-left: 1px solid var(--grid-strong);
+}
+
+.timeline-head .tick .d {
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.timeline-head .tick .m {
+  font-size: 10px;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* phase header row spans both columns */
+.phase-row {
+  grid-column: 1 / -1;
+  height: var(--phase-row-h);
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  position: relative;
+}
+
+.phase-row .swatch {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  margin-right: 8px;
+}
+
+.phase-row .count {
+  margin-left: 8px;
+  color: var(--ink-3);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* task row in left column */
+.task-cell {
+  height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.task-cell:hover { background: var(--surface-2); }
+.task-cell:focus-visible {
+  outline: 2px solid var(--phase-3);
+  outline-offset: -2px;
+}
+
+.task-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-name .nm {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-name .meta {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-cell .owners {
+  display: flex;
+  gap: 3px;
+}
+
+.owner-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--ink-2);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* status pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.status-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .85;
+}
+
+.status-pill[data-s="on-track"] { background: var(--ok-bg); color: var(--ok); border-color: #bbf7d0; }
+.status-pill[data-s="at-risk"]  { background: var(--warn-bg); color: var(--warn); border-color: #fde68a; }
+.status-pill[data-s="delayed"]  { background: var(--bad-bg); color: var(--bad); border-color: #fecaca; }
+
+/* status dropdown */
+.status-menu {
+  position: absolute;
+  z-index: 100;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-3);
+  padding: 4px;
+  min-width: 140px;
+}
+.status-menu button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 6px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: left;
+  border-radius: 4px;
+}
+.status-menu button:hover { background: var(--surface-2); }
+
+/* timeline canvas (right side of grid) */
+.timeline-canvas {
+  position: relative;
+  background: var(--surface);
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px);
+  background-size: calc(var(--pxPerDay) * 1px) 100%;
+}
+
+.timeline-canvas::before {
+  /* monday gridlines as overlay */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--grid-strong) 1px, transparent 1px);
+  background-size: calc(var(--pxPerDay) * 7px) 100%;
+  pointer-events: none;
+}
+
+.timeline-row {
+  position: relative;
+  height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+}
+
+/* the bar */
+.bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--bar-h);
+  border-radius: var(--radius-1);
+  cursor: grab;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.bar:active { cursor: grabbing; }
+
+.bar:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.bar .fill {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-1);
+  overflow: hidden;
+}
+
+.bar .fill .body {
+  position: absolute;
+  inset: 0;
+  background: var(--bar-color, var(--phase-1));
+}
+
+.bar .fill .progress {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 0%;
+  background: rgba(0,0,0,0.22);
+}
+
+.bar .label {
+  position: relative;
+  z-index: 2;
+  padding: 0 8px;
+  font-weight: 500;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+  pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar.cp .fill {
+  box-shadow: inset 0 0 0 2px var(--cp);
+}
+
+/* resize handles */
+.bar .handle {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 8px;
+  z-index: 3;
+  cursor: ew-resize;
+}
+.bar .handle.l { left: -4px; }
+.bar .handle.r { right: -4px; }
+.bar .handle::after {
+  content: "";
+  position: absolute;
+  top: 4px; bottom: 4px;
+  left: 3px;
+  width: 2px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity .12s;
+}
+.bar:hover .handle::after { opacity: 1; }
+
+/* baseline ghost */
+.baseline {
+  position: absolute;
+  top: calc(50% + 14px);
+  height: 4px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink-4) 0 4px,
+    transparent 4px 8px
+  );
+  pointer-events: none;
+}
+
+.slip-tag {
+  position: absolute;
+  top: calc(50% + 8px);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.slip-tag.bad { background: var(--bad-bg); color: var(--bad); border: 1px solid #fecaca; }
+.slip-tag.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid #bbf7d0; }
+
+/* milestone diamond */
+.milestone {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--bar-color, var(--phase-1));
+  border-radius: 2px;
+  cursor: grab;
+}
+.milestone.hollow {
+  background: var(--surface);
+  border: 2px solid var(--bar-color, var(--phase-1));
+}
+.milestone.cp {
+  box-shadow: 0 0 0 2px var(--cp);
+}
+.milestone:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.milestone-label {
+  position: absolute;
+  top: calc(50% + 14px);
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* session marker */
+.session-mark {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 2px solid var(--phase-4);
+  z-index: 4;
+}
+.session-mark.tbd {
+  border-style: dashed;
+  background: var(--surface);
+}
+.session-mark.tbd::after {
+  content: "?";
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--phase-4);
+}
+
+/* TODAY line */
+.today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--today);
+  z-index: 6;
+  pointer-events: none;
+}
+.today-label {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  transform: translateX(-50%);
+  background: var(--today);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* drag tooltip */
+.drag-tip {
+  position: fixed;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 999;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-2);
+  white-space: nowrap;
+}
+
+/* ----- Footer ------------------------------------------------------ */
+.app-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ----- Modal ------------------------------------------------------- */
+
+dialog.task-modal {
+  width: min(560px, 100% - 32px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-3);
+  padding: 0;
+  box-shadow: var(--shadow-3);
+  background: var(--surface);
+  color: var(--ink);
+}
+dialog.task-modal::backdrop {
+  background: rgba(28,25,23,0.45);
+  backdrop-filter: blur(2px);
+}
+
+.modal-head {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.modal-close {
+  background: transparent;
+  border: 0;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ink-3);
+  width: 28px; height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.modal-close:hover { background: var(--surface-2); color: var(--ink); }
+
+.modal-body {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.modal-body .full { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="date"],
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.field textarea { min-height: 70px; resize: vertical; font-family: inherit; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: var(--phase-3);
+  box-shadow: 0 0 0 3px var(--phase-3-soft);
+}
+
+.field-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+.chip-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-weight: 500;
+}
+.chip-pick.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.range-row { display: flex; align-items: center; gap: 8px; }
+.range-row input[type="range"] { flex: 1; }
+.range-row .pct { font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; font-size: 12px; color: var(--ink-2); }
+
+.modal-foot {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  background: var(--surface-2);
+  border-bottom-left-radius: var(--radius-3);
+  border-bottom-right-radius: var(--radius-3);
+}
+.modal-foot .spacer { flex: 1; }
+
+/* ----- Empty state ------------------------------------------------- */
+
+.empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--ink-3);
+}
+.empty h3 { color: var(--ink-2); font-weight: 600; margin: 0 0 6px; }
+.empty p { margin: 0 0 16px; font-size: 13px; }
+
+/* ----- Toast ------------------------------------------------------- */
+
+.toast-host {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 999;
+  pointer-events: none;
+}
+.toast {
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  padding: 9px 14px;
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-3);
+  animation: toast-in .2s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ----- Password gate (off by default) ----------------------------- */
+
+#gate:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#gate .card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-3);
+  padding: 28px 28px 22px;
+  width: min(380px, calc(100% - 32px));
+  text-align: center;
+}
+#gate h2 { margin: 0 0 6px; font-size: 17px; }
+#gate p { margin: 0 0 16px; font-size: 13px; color: var(--ink-3); }
+#gate input { width: 100%; padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 4px; font: inherit; font-size: 14px; }
+#gate .err { color: var(--bad); font-size: 12px; margin-top: 8px; height: 16px; }
+#gate button { margin-top: 12px; width: 100%; padding: 9px; }
+
+/* ----- Bottom bar (Settings link) --------------------------------- */
+.bottom-bar {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+.bottom-bar .btn-link {
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-3);
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+.bottom-bar .btn-link:hover { color: var(--ink); background: var(--surface-2); }
+
+/* ----- Settings dialog -------------------------------------------- */
+dialog.settings-modal {
+  width: min(560px, 100% - 32px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-3);
+  padding: 0;
+  box-shadow: var(--shadow-3);
+  background: var(--surface);
+  color: var(--ink);
+}
+dialog.settings-modal::backdrop {
+  background: rgba(28,25,23,0.45);
+  backdrop-filter: blur(2px);
+}
+.settings-modal .modal-head h2 {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: Georgia, "Times New Roman", serif;
+}
+.settings-modal .modal-head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+.settings-modal .settings-body {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.settings-modal .settings-body .field-group label.top {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 6px;
+}
+.settings-modal .settings-body .field-group label.top .hint {
+  color: var(--ink-3);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.settings-modal .settings-body input[type="text"],
+.settings-modal .settings-body input[type="password"] {
+  width: 100%;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.settings-modal .settings-body input:focus {
+  outline: none;
+  border-color: var(--phase-3);
+  box-shadow: 0 0 0 3px var(--phase-3-soft);
+}
+.settings-modal .settings-body .help {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.settings-modal .settings-body .help b { color: var(--ink-2); font-weight: 600; }
+.settings-modal .settings-body .pub-status {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  border: 1px solid var(--border);
+}
+.settings-modal .settings-body .pub-status .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ink-4);
+}
+.settings-modal .settings-body .pub-status.ready { color: var(--ok); background: var(--ok-bg); border-color: #bbf7d0; }
+.settings-modal .settings-body .pub-status.ready .dot { background: var(--ok); }
+
+.settings-modal .settings-divider {
+  height: 1px;
+  background: var(--border);
+}
+.settings-modal .danger-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.settings-modal .danger-row .btn.danger-soft {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--bad);
+  padding: 7px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.settings-modal .danger-row .btn.danger-soft:hover { background: var(--bad-bg); border-color: #fecaca; }
+.settings-modal .modal-foot .btn.primary { background: var(--bad); border-color: var(--bad); color: #fff; }
+.settings-modal .modal-foot .btn.primary:hover { background: #991b1b; }
+
+/* ----- Print ------------------------------------------------------- */
+@media print {
+  @page { size: landscape; margin: 12mm; }
+  html, body { background: #fff; color: #000; }
+  .toolbar, .modal-foot, .btn, dialog, .toast-host, .status-menu, #gate, .bottom-bar { display: none !important; }
+  .app-shell { max-width: none; padding: 0; }
+  .chart-card, .kpi { box-shadow: none; border-color: #999; page-break-inside: avoid; }
+  .chart-scroll { overflow: visible !important; }
+  .chart-grid { min-width: 0; }
+  .timeline-canvas { background-color: #fff; }
+  .app-footer { page-break-before: always; }
+  .bar .label { color: #000; text-shadow: none; }
+  .bar .fill .body { filter: brightness(1.1); }
+}
+
+/* keep checkbox tidy in modal */
+input[type="checkbox"] { accent-color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- ===== PASSWORD GATE (off by default) ============================
+     Toggle via ENABLE_PASSWORD_GATE in script. See deployment docs.
+================================================================== -->
+<div id="gate" hidden>
+  <div class="card">
+    <h2>Restricted</h2>
+    <p>Enter access password to view this plan.</p>
+    <input type="password" id="gate-input" autocomplete="off" aria-label="Password">
+    <div class="err" id="gate-err" role="alert"></div>
+    <button class="btn primary" id="gate-go">Unlock</button>
+  </div>
+</div>
+
+<div class="app-shell" id="app">
+
+  <!-- ===== HEADER ============================================== -->
+  <header class="app-header">
+    <div class="app-title">
+      <h1>Pilot Rollout Logistics &amp; Administration Plan</h1>
+      <p>Phase 1 Pilot · Working backward from June 17, 2026 · <span id="task-count">13 tracked items</span> across 4 phases</p>
+    </div>
+    <div class="app-meta">
+      <strong>Generated</strong>
+      May 07, 2026
+    </div>
+  </header>
+
+  <!-- ===== DASHBOARD =========================================== -->
+  <section class="dashboard" id="dashboard" aria-label="Project health"></section>
+
+  <!-- ===== TOOLBAR ============================================= -->
+  <section class="toolbar" role="toolbar" aria-label="Plan controls">
+    <button class="btn primary" id="btn-add">＋ Add task</button>
+    <button class="btn" id="btn-publish" title="Push current state to your GitHub repo">↑ Publish to GitHub</button>
+    <div class="spacer"></div>
+    <button class="btn" id="btn-csv">Export CSV</button>
+    <button class="btn" id="btn-pdf">Export PDF</button>
+    <button class="btn danger" id="btn-reset">Reset</button>
+  </section>
+
+  <!-- ===== CHART =============================================== -->
+  <main class="chart-card" aria-label="Gantt chart">
+    <div class="chart-scroll" id="chart-scroll">
+      <div class="chart-grid" id="chart-grid">
+        <!-- header row -->
+        <div class="task-col-head">Task &amp; owner</div>
+        <div class="timeline-head" id="timeline-head"><div class="ticks" id="timeline-ticks"></div></div>
+        <!-- rows injected by JS -->
+        <div id="rows-host" style="display:contents"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ============================================== -->
+  <footer class="app-footer">
+    <span>Cedars-Sinai · Professional Development Series · Phase 1 Pilot</span>
+    <span id="foot-meta"></span>
+  </footer>
+
+  <!-- ===== BOTTOM BAR (Settings) ================================== -->
+  <div class="bottom-bar">
+    <button class="btn-link" id="btn-settings" aria-label="Open settings">Settings</button>
+  </div>
+
+</div>
+
+<!-- ===== MODAL ================================================== -->
+<dialog class="task-modal" id="modal">
+  <div class="modal-head">
+    <h2 id="modal-title">Edit task</h2>
+    <button class="modal-close" id="modal-close" aria-label="Close">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="field full">
+      <label for="f-name">Task name</label>
+      <input type="text" id="f-name" required>
+    </div>
+    <div class="field">
+      <label for="f-phase">Phase</label>
+      <select id="f-phase">
+        <option value="1">1 · Setup &amp; Stakeholder Mgmt</option>
+        <option value="2">2 · Content Development</option>
+        <option value="3">3 · Review &amp; Approval</option>
+        <option value="4">4 · Pilot Execution</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-type">Type</label>
+      <select id="f-type">
+        <option value="duration">Duration</option>
+        <option value="milestone">Milestone</option>
+        <option value="session-series">Session series</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-start">Start date</label>
+      <input type="date" id="f-start">
+    </div>
+    <div class="field">
+      <label for="f-end">End date</label>
+      <input type="date" id="f-end">
+    </div>
+    <div class="field">
+      <label for="f-dur">Duration (days)</label>
+      <input type="number" id="f-dur" min="0" step="1">
+    </div>
+    <div class="field">
+      <label for="f-status">Status</label>
+      <select id="f-status">
+        <option value="on-track">On Track</option>
+        <option value="at-risk">At Risk</option>
+        <option value="delayed">Delayed</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn danger" id="modal-delete">Delete</button>
+    <div class="spacer"></div>
+    <button class="btn" id="modal-cancel">Cancel</button>
+    <button class="btn primary" id="modal-save">Save</button>
+  </div>
+</dialog>
+
+<!-- ===== SETTINGS DIALOG ========================================== -->
+<dialog class="settings-modal" id="settings">
+  <div class="modal-head">
+    <div>
+      <h2>Settings</h2>
+      <p>These settings are stored only in your browser. Your manager won't see this.</p>
+    </div>
+    <button class="modal-close" id="s-close" aria-label="Close">×</button>
+  </div>
+  <div class="settings-body">
+
+    <div class="field-group">
+      <label class="top" for="s-repo">GITHUB REPO URL</label>
+      <input type="text" id="s-repo" placeholder="https://github.com/owner/repo" autocomplete="off">
+      <p class="help">Used for the "Publish to GitHub" shortcut and for one-click publishing.</p>
+    </div>
+
+    <div class="field-group">
+      <label class="top" for="s-token">GITHUB TOKEN <span class="hint">(for one-click publishing)</span></label>
+      <input type="password" id="s-token" autocomplete="off">
+      <p class="help">
+        Create one at <b>github.com → Profile → Settings → Developer settings → Personal access tokens → Tokens (classic)</b>.
+        Check <b>public_repo</b> scope only. The token is stored only in your browser and never sent anywhere except GitHub's API.
+      </p>
+      <div class="pub-status" id="s-status">
+        <span class="dot"></span><span class="label">Add repo URL and token to enable</span>
+      </div>
+    </div>
+
+    <div class="settings-divider"></div>
+
+    <div class="field-group danger-row">
+      <label class="top">LOCAL DRAFTS</label>
+      <p class="help" style="margin-top:0">Edits-in-progress are auto-saved here so refreshing doesn't lose work.</p>
+      <button type="button" class="btn danger-soft" id="s-clear-drafts">Clear all local drafts</button>
+    </div>
+
+  </div>
+  <div class="modal-foot">
+    <div class="spacer"></div>
+    <button class="btn" id="s-cancel">Cancel</button>
+    <button class="btn primary" id="s-save">Save settings</button>
+  </div>
+</dialog>
+
+<div class="toast-host" id="toast-host" aria-live="polite"></div>
+<div id="drag-tip-host"></div>
+
+<script>
+/* ==========================================================================
+   PILOT ROLLOUT GANTT — APPLICATION SCRIPT
+   --------------------------------------------------------------------------
+   Single-file vanilla-JS Gantt + lightweight project-management tool.
+   No frameworks, no build, no runtime CDNs.
+
+   MODULE MAP
+   ─────────────────────────────────────────────────────────────────────
+   1. CONSTANTS .......... phases, owners, seed data, storage version
+   2. DEPLOYMENT NOTES ... GitHub Pages + access-protection options
+   3. STATE .............. loadState, saveState, resetState, importState
+   4. DATE_UTIL .......... parseDate, fmt, addDays, daysBetween, monday
+   5. LAYOUT ............. computeBounds, dateToX, xToDate, pxPerDay reflow
+   6. CRITICAL_PATH ...... default-chain inference + forward/backward pass
+   7. RENDER ............. dashboard, ticks, rows, bars, today-line, modal
+   8. INTERACT ........... drag-resize, drag-move, status pill, keyboard
+   9. MODAL .............. open, close, save, delete, focus trap
+  10. EXPORT ............. CSV, JSON, print (PDF), import JSON
+  11. GATE .............. password gate scaffold (off by default)
+  12. INIT .............. bootstrap, resize listener, hydration
+
+   ─────────────────────────────────────────────────────────────────────
+   GITHUB PAGES DEPLOYMENT
+   ─────────────────────────────────────────────────────────────────────
+   1. Create a new GitHub repo (public or private — Pages works on both
+      with a Pro plan).
+   2. Commit this file as `index.html` to the `main` branch.
+   3. Repo Settings → Pages → Source: `Deploy from a branch`
+        → Branch: `main`, folder: `/ (root)` → Save.
+   4. Wait ~1 minute for the deploy. Visit
+      https://<username>.github.io/<repo-name>/.
+
+   ─────────────────────────────────────────────────────────────────────
+   ACCESS PROTECTION OPTIONS
+   ─────────────────────────────────────────────────────────────────────
+   Option 1 — Simple password gate (client-side, low security)
+     - On load, prompt for a password. Compare against a SHA-256 hash baked
+       into the HTML (PASSWORD_HASH constant below).
+     - Implementation: SubtleCrypto (window.crypto.subtle.digest).
+     - Pros: zero infrastructure, works on free GitHub Pages.
+     - Cons: anyone who views source can see the hash and brute-force it
+       offline. NOT for sensitive data. Treat it as a "polite gate," not
+       real security.
+     - To enable: set ENABLE_PASSWORD_GATE = true (below) and replace
+       PASSWORD_HASH with the SHA-256 of your chosen password. Generate
+       the hash by running this one-liner in any browser console:
+         const h = await crypto.subtle.digest('SHA-256',
+                     new TextEncoder().encode('YOUR_PASSWORD'));
+         console.log([...new Uint8Array(h)]
+           .map(b => b.toString(16).padStart(2,'0')).join(''));
+
+   Option 2 — Private repo + GitHub Personal Access Token (PAT)
+     - Make the repo private. GitHub Pages requires a Pro/Team/Enterprise
+       plan for private Pages.
+     - Share the URL only with collaborators who have repo access; GitHub
+       will prompt them to authenticate via their GitHub session.
+     - For programmatic access, generate a fine-scoped PAT at
+       https://github.com/settings/tokens?type=beta with `Contents: Read`
+       on this repo only. Use it as `Authorization: Bearer <PAT>` against
+       the Contents API, NOT against the Pages URL.
+     - Pros: real authentication, audit log, revocable.
+     - Cons: requires a paid plan for private Pages; PATs are user-scoped
+       and rotate.
+
+   Option 3 — Cloudflare Access in front of Pages (recommended for real
+   protection)
+     - Put the Pages site behind a Cloudflare Zero Trust application with
+       email-OTP or Google SSO.
+     - Free tier covers up to 50 users.
+     - Pros: real auth, no plan upgrade, SSO, logs.
+     - Cons: requires routing the domain through Cloudflare.
+
+   For sharing this with a senior director, Option 3 is the cleanest.
+   Option 1 is acceptable for a short-lived demo. Option 2 makes sense
+   if your team already pays for GitHub Team/Enterprise.
+   ========================================================================== */
+
+'use strict';
+
+// ─── 1. CONSTANTS ─────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'gantt_state_v1';
+
+const PHASES = {
+  1: { id: 1, name: 'Setup & Stakeholder Mgmt', short: '1 · Setup',        color: 'var(--phase-1)', soft: 'var(--phase-1-soft)' },
+  2: { id: 2, name: 'Content Development',       short: '2 · Content Dev.', color: 'var(--phase-2)', soft: 'var(--phase-2-soft)' },
+  3: { id: 3, name: 'Review & Approval',         short: '3 · Review',       color: 'var(--phase-3)', soft: 'var(--phase-3-soft)' },
+  4: { id: 4, name: 'Pilot Execution',            short: '4 · Pilot',        color: 'var(--phase-4)', soft: 'var(--phase-4-soft)' }
+};
+
+const OWNER_LABELS = { L: 'Liv', S: 'Suzan', B: 'Brian', SD: 'Senior Director', PM: 'Project Lead' };
+
+const GO_LIVE = '2026-06-17';
+
+// Seed data (verbatim from spec). Dates ISO. baselineStart/End match
+// start/end on first save so subsequent edits compute slip correctly.
+const SEED = [
+  { id: 1,  name: 'Confirm stakeholder list',   type: 'duration',  startDate: '2026-05-08', endDate: '2026-05-12', owners: ['PM'],     phase: 1 },
+  { id: 2,  name: 'Establish status tracker',    type: 'duration',  startDate: '2026-05-08', endDate: '2026-05-14', owners: ['PM'],     phase: 1 },
+  { id: 3,  name: 'Send calendar invites',       type: 'duration',  startDate: '2026-05-12', endDate: '2026-05-16', owners: ['PM'],     phase: 1 },
+  { id: 4,  name: 'Module outlines complete',    type: 'milestone', startDate: '2026-05-15', endDate: '2026-05-15', owners: ['L','S','B'], phase: 2 },
+  { id: 5,  name: 'Build draft decks',           type: 'duration',  startDate: '2026-05-15', endDate: '2026-05-22', owners: ['L','S','B'], phase: 2 },
+  { id: 6,  name: 'Touchpoint review meetings',  type: 'duration',  startDate: '2026-05-25', endDate: '2026-06-03', owners: ['PM'],     phase: 2 },
+  { id: 7,  name: 'Finalize decks + guides',     type: 'duration',  startDate: '2026-05-22', endDate: '2026-06-05', owners: ['L','S','B'], phase: 2 },
+  { id: 8,  name: 'Final content complete',      type: 'milestone', startDate: '2026-06-05', endDate: '2026-06-05', owners: ['L','S','B'], phase: 2 },
+  { id: 9,  name: 'Sr. Director content review', type: 'duration',  startDate: '2026-06-05', endDate: '2026-06-11', owners: ['SD'],     phase: 3 },
+  { id: 10, name: 'System review',                type: 'duration',  startDate: '2026-06-08', endDate: '2026-06-12', owners: ['SD','PM'], phase: 3 },
+  { id: 11, name: 'Facilitation plan confirmed',  type: 'milestone', startDate: '2026-06-12', endDate: '2026-06-12', owners: ['PM'],     phase: 3 },
+  { id: 12, name: 'Sr. Director final approval',  type: 'milestone', startDate: '2026-06-16', endDate: '2026-06-16', owners: ['SD'],     phase: 3 },
+  { id: 13, name: 'Pilot sessions',                type: 'session-series', startDate: '2026-06-17', endDate: '2026-06-29',
+            owners: ['L','S','B'], phase: 4,
+            sessions: [
+              { date: '2026-06-17', confirmed: true },
+              { date: '2026-06-20', confirmed: true },
+              { date: '2026-06-23', confirmed: true },
+              { date: '2026-06-26', confirmed: true },
+              { date: '2026-06-29', confirmed: true },
+              { date: null, confirmed: false }, // TBD 1
+              { date: null, confirmed: false }  // TBD 2
+            ] },
+  { id: 14, name: 'Feedback collection',          type: 'duration',  startDate: '2026-06-17', endDate: '2026-07-03', owners: ['PM'],     phase: 4 }
+].map(t => ({
+  status: 'on-track',
+  percentComplete: 0,
+  baselineStart: t.startDate,
+  baselineEnd: t.endDate,
+  predecessors: [],
+  notes: '',
+  ...t
+}));
+
+const ENABLE_PASSWORD_GATE = false;
+// Replace with SHA-256 of your password to enable. See deployment doc above.
+// Default placeholder corresponds to no real password.
+const PASSWORD_HASH = '0000000000000000000000000000000000000000000000000000000000000000';
+
+// ─── 3. STATE ─────────────────────────────────────────────────────────────
+
+const State = {
+  version: 1,
+  tasks: [],
+  nextId: 100,         // monotonic for new tasks
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) { seedState(); return; }
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.tasks)) throw new Error('bad shape');
+    State.version = parsed.version || 1;
+    State.tasks   = parsed.tasks.map(normalizeTask);
+    State.nextId  = parsed.nextId || (Math.max(0, ...State.tasks.map(t => t.id)) + 1);
+  } catch (e) {
+    console.warn('[gantt] localStorage unreadable, falling back to seed:', e);
+    toast('Saved data was unreadable — restored defaults');
+    seedState();
+  }
+}
+
+function seedState() {
+  State.tasks  = JSON.parse(JSON.stringify(SEED));
+  State.nextId = Math.max(...State.tasks.map(t => t.id)) + 1;
+  saveState();
+}
+
+function normalizeTask(t) {
+  return {
+    id: Number(t.id),
+    name: String(t.name || 'Untitled'),
+    type: ['duration','milestone','session-series'].includes(t.type) ? t.type : 'duration',
+    startDate: t.startDate, endDate: t.endDate || t.startDate,
+    owners: Array.isArray(t.owners) ? t.owners.slice() : [],
+    phase: [1,2,3,4].includes(Number(t.phase)) ? Number(t.phase) : 1,
+    status: ['on-track','at-risk','delayed'].includes(t.status) ? t.status : 'on-track',
+    percentComplete: clamp(Number(t.percentComplete) || 0, 0, 100),
+    baselineStart: t.baselineStart || t.startDate,
+    baselineEnd: t.baselineEnd || t.endDate || t.startDate,
+    predecessors: Array.isArray(t.predecessors) ? t.predecessors.map(Number) : [],
+    notes: String(t.notes || ''),
+    sessions: Array.isArray(t.sessions) ? t.sessions : null
+  };
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 1, tasks: State.tasks, nextId: State.nextId
+    }));
+  } catch (e) {
+    console.warn('[gantt] could not save state:', e);
+  }
+}
+
+function resetState() {
+  if (!confirm('Reset to default plan? Your local edits will be lost.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  seedState();
+  render();
+  toast('Restored defaults');
+}
+
+// ─── 4. DATE_UTIL ─────────────────────────────────────────────────────────
+
+const ONE_DAY = 86400000;
+
+function parseDate(iso) {
+  if (!iso) return null;
+  // Treat ISO date as a calendar date (UTC midnight) to avoid TZ drift.
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+function fmtIso(d) {
+  if (!d) return null;
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const da = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${da}`;
+}
+function fmtShort(iso) { // "May 08"
+  const d = parseDate(iso); if (!d) return '';
+  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' });
+}
+function fmtFull(iso) {
+  const d = parseDate(iso); if (!d) return '';
+  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'UTC' });
+}
+function addDays(iso, n) {
+  const d = parseDate(iso); d.setUTCDate(d.getUTCDate() + n); return fmtIso(d);
+}
+function daysBetween(a, b) { // exclusive end-of-day; returns integer days
+  return Math.round((parseDate(b).getTime() - parseDate(a).getTime()) / ONE_DAY);
+}
+function isoToday() {
+  const d = new Date();
+  // Use local "today" but stored as if UTC date.
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function priorMonday(iso) {
+  const d = parseDate(iso);
+  const dow = d.getUTCDay(); // 0=Sun..6=Sat
+  const offset = (dow + 6) % 7; // days since Mon
+  d.setUTCDate(d.getUTCDate() - offset);
+  return fmtIso(d);
+}
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+// ─── 5. LAYOUT ────────────────────────────────────────────────────────────
+
+const Layout = {
+  pxPerDay: 22,            // synced to --pxPerDay; reflows on resize
+  chartStart: '2026-05-04',// monday on/before earliest event
+  chartEnd:   '2026-07-12',// sunday on/after latest event + buffer
+};
+
+function computeBounds() {
+  // Required default visible window from spec.
+  const REQUIRED_START = '2026-05-11';
+  const REQUIRED_END   = '2026-06-29';
+  let earliest = REQUIRED_START, latest = REQUIRED_END;
+  for (const t of State.tasks) {
+    if (t.startDate && t.startDate < earliest) earliest = t.startDate;
+    if (t.endDate   && t.endDate   > latest)   latest   = t.endDate;
+    if (t.baselineStart && t.baselineStart < earliest) earliest = t.baselineStart;
+    if (t.baselineEnd   && t.baselineEnd   > latest)   latest   = t.baselineEnd;
+  }
+  Layout.chartStart = priorMonday(earliest);
+  // pad to next sunday + 7 days of slack
+  const padded = addDays(latest, 14);
+  Layout.chartEnd = priorMonday(padded);
+  // ensure end after start (>= 4 weeks)
+  if (daysBetween(Layout.chartStart, Layout.chartEnd) < 28) {
+    Layout.chartEnd = addDays(Layout.chartStart, 56);
+  }
+}
+
+function fitPxPerDay() {
+  const scrollEl = document.getElementById('chart-scroll');
+  if (!scrollEl) return;
+  const taskW = 340;
+  const available = scrollEl.clientWidth - taskW - 4;
+  const days = daysBetween(Layout.chartStart, Layout.chartEnd) + 1;
+  if (days <= 0) return;
+  // Aim to fit by default; allow horizontal scroll if too narrow.
+  const ideal = Math.floor(available / days);
+  Layout.pxPerDay = clamp(ideal, 14, 36);
+  document.documentElement.style.setProperty('--pxPerDay', Layout.pxPerDay);
+}
+
+function dateToX(iso) {
+  return daysBetween(Layout.chartStart, iso) * Layout.pxPerDay;
+}
+function xToDate(x) {
+  const d = Math.round(x / Layout.pxPerDay);
+  return addDays(Layout.chartStart, d);
+}
+function timelineWidthPx() {
+  return (daysBetween(Layout.chartStart, Layout.chartEnd) + 1) * Layout.pxPerDay;
+}
+
+// ─── 6. CRITICAL_PATH ─────────────────────────────────────────────────────
+// Forward/backward pass on inferred + explicit dependencies. A task with
+// zero float (latest start == earliest start) is on the critical path.
+//
+// Default chain inference (when no explicit predecessors set):
+//   - Within a phase: each duration task feeds the next duration task in
+//     the same phase by start order; each milestone gates downstream tasks.
+//   - Across phases: the final duration task in phase N feeds the first
+//     task in phase N+1; milestones in phase N also gate phase N+1's start.
+//
+// We treat each task as a node with duration = endDate-startDate (>=1).
+// "Time" units are days from chart start.
+
+function computeCriticalPath() {
+  const tasks = State.tasks;
+  if (!tasks.length) return new Set();
+
+  // Build adjacency: predecessor ids per task.
+  const byId = new Map(tasks.map(t => [t.id, t]));
+  const preds = new Map(tasks.map(t => [t.id, new Set(t.predecessors || [])]));
+
+  // Phase grouping for default inference
+  const phaseTasks = { 1: [], 2: [], 3: [], 4: [] };
+  for (const t of tasks) phaseTasks[t.phase]?.push(t);
+  for (const k of Object.keys(phaseTasks)) {
+    phaseTasks[k].sort((a, b) => a.startDate.localeCompare(b.startDate) || a.id - b.id);
+  }
+
+  // Inferred predecessors only added if user hasn't provided any for that task.
+  for (let p = 1; p <= 4; p++) {
+    const list = phaseTasks[p];
+    for (let i = 1; i < list.length; i++) {
+      const cur = list[i], prev = list[i-1];
+      if (preds.get(cur.id).size === 0) preds.get(cur.id).add(prev.id);
+    }
+    // milestones in phase p gate phase p+1's first task
+    if (p < 4) {
+      const next = phaseTasks[p+1][0];
+      if (next && preds.get(next.id).size === 0) {
+        const tail = list[list.length - 1];
+        if (tail) preds.get(next.id).add(tail.id);
+      }
+      // also: any milestone in phase p gates phase p+1 first task
+      for (const m of list.filter(t => t.type === 'milestone')) {
+        if (next && !preds.get(next.id).has(m.id)) preds.get(next.id).add(m.id);
+      }
+    }
+  }
+
+  // Topological order
+  const indeg = new Map(tasks.map(t => [t.id, 0]));
+  const succ = new Map(tasks.map(t => [t.id, []]));
+  for (const t of tasks) {
+    for (const pid of preds.get(t.id)) {
+      if (!byId.has(pid)) continue;
+      indeg.set(t.id, indeg.get(t.id) + 1);
+      succ.get(pid).push(t.id);
+    }
+  }
+  const queue = [];
+  indeg.forEach((v, k) => { if (v === 0) queue.push(k); });
+  const order = [];
+  while (queue.length) {
+    const id = queue.shift(); order.push(id);
+    for (const s of succ.get(id)) {
+      indeg.set(s, indeg.get(s) - 1);
+      if (indeg.get(s) === 0) queue.push(s);
+    }
+  }
+  if (order.length !== tasks.length) {
+    // cycle — bail out, no CP highlighting
+    return new Set();
+  }
+
+  const dur = id => {
+    const t = byId.get(id);
+    return Math.max(t.type === 'milestone' ? 0 : 1, daysBetween(t.startDate, t.endDate));
+  };
+
+  // Forward pass: ES, EF
+  const ES = new Map(), EF = new Map();
+  for (const id of order) {
+    let es = 0;
+    for (const pid of preds.get(id)) {
+      if (EF.has(pid)) es = Math.max(es, EF.get(pid));
+    }
+    ES.set(id, es); EF.set(id, es + dur(id));
+  }
+
+  const projectFinish = Math.max(...EF.values());
+
+  // Backward pass: LF, LS
+  const LF = new Map(), LS = new Map();
+  for (let i = order.length - 1; i >= 0; i--) {
+    const id = order[i];
+    const successors = succ.get(id);
+    let lf = projectFinish;
+    if (successors.length) {
+      lf = Math.min(...successors.map(s => LS.get(s)));
+    }
+    LF.set(id, lf); LS.set(id, lf - dur(id));
+  }
+
+  // Float = LS - ES; CP if float === 0
+  const cp = new Set();
+  for (const id of order) {
+    if ((LS.get(id) - ES.get(id)) === 0) cp.add(id);
+  }
+  return cp;
+}
+
+// ─── 7. RENDER ─────────────────────────────────────────────────────────────
+
+let CP_SET = new Set();
+
+function render() {
+  computeBounds();
+  fitPxPerDay();
+  CP_SET = computeCriticalPath();
+  renderDashboard();
+  renderTicks();
+  renderRows();
+  renderTodayLine();
+  renderTaskCount();
+  document.getElementById('foot-meta').textContent =
+    `${State.tasks.length} task${State.tasks.length === 1 ? '' : 's'}` +
+    ` · Updated ${new Date().toLocaleString()}`;
+}
+
+function renderTaskCount() {
+  const el = document.getElementById('task-count');
+  if (!el) return;
+  const n = State.tasks.length;
+  el.textContent = `${n} tracked item${n === 1 ? '' : 's'}`;
+}
+
+function renderDashboard() {
+  const host = document.getElementById('dashboard');
+  const tasks = State.tasks;
+  const total = tasks.length;
+  const onTrack = tasks.filter(t => t.status === 'on-track').length;
+  const atRisk  = tasks.filter(t => t.status === 'at-risk').length;
+  const delayed = tasks.filter(t => t.status === 'delayed').length;
+  const pct = total ? Math.round(tasks.reduce((s,t) => s + t.percentComplete, 0) / total) : 0;
+  const today = isoToday();
+  const daysToGo = total ? daysBetween(today, GO_LIVE) : 0;
+  const slipped = tasks.filter(t => t.endDate > t.baselineEnd).length;
+  const cpCount = CP_SET.size;
+
+  function pctOf(n) { return total ? Math.round(100 * n / total) + '%' : '0%'; }
+
+  host.innerHTML = `
+    <div class="kpi"><div class="v">${total}</div><div class="l">Total tasks</div></div>
+    <div class="kpi"><div class="v ok">${pctOf(onTrack)}</div><div class="l">On track</div><div class="sub">${onTrack} of ${total}</div></div>
+    <div class="kpi"><div class="v warn">${pctOf(atRisk)}</div><div class="l">At risk</div><div class="sub">${atRisk} of ${total}</div></div>
+    <div class="kpi"><div class="v bad">${pctOf(delayed)}</div><div class="l">Delayed</div><div class="sub">${delayed} of ${total}</div></div>
+    <div class="kpi"><div class="v">${pct}%</div><div class="l">Complete</div><div class="sub">weighted avg</div></div>
+    <div class="kpi"><div class="v ${daysToGo < 0 ? 'bad' : ''}">${daysToGo}</div><div class="l">Days to go-live</div><div class="sub">${fmtFull(GO_LIVE)}</div></div>
+    <div class="kpi"><div class="v ${slipped ? 'bad' : 'muted'}">${slipped}</div><div class="l">Slipped</div><div class="sub">${cpCount} on critical path</div></div>
+  `;
+}
+
+function renderTicks() {
+  const ticks = document.getElementById('timeline-ticks');
+  const head  = document.getElementById('timeline-head');
+  const totalDays = daysBetween(Layout.chartStart, Layout.chartEnd) + 1;
+  const w = totalDays * Layout.pxPerDay;
+  ticks.style.width = w + 'px';
+  head.style.minWidth = w + 'px';
+
+  let html = '';
+  // weekly ticks every 7 days starting at chartStart (which is a monday)
+  for (let d = 0; d < totalDays; d += 7) {
+    const iso = addDays(Layout.chartStart, d);
+    const date = parseDate(iso);
+    const dayLabel = date.toLocaleDateString('en-US', { day: '2-digit', timeZone: 'UTC' });
+    const monLabel = date.toLocaleDateString('en-US', { month: 'short',  timeZone: 'UTC' });
+    html += `<div class="tick" style="left:${d * Layout.pxPerDay}px"><span class="d">${monLabel} ${dayLabel}</span></div>`;
+  }
+  ticks.innerHTML = html;
+}
+
+function renderRows() {
+  const host = document.getElementById('rows-host');
+  const grid = document.getElementById('chart-grid');
+  // remove previous overlay if any
+  const oldOverlay = grid.querySelector('.today-overlay');
+  if (oldOverlay) oldOverlay.remove();
+
+  if (!State.tasks.length) {
+    host.innerHTML = `
+      <div style="grid-column: 1 / -1">
+        <div class="empty">
+          <h3>No tasks yet</h3>
+          <p>Your plan is empty. Add a task to get started.</p>
+          <button class="btn primary" onclick="openModal(null)">＋ Add your first task</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const tlWidth = timelineWidthPx();
+  const groups = { 1: [], 2: [], 3: [], 4: [] };
+  for (const t of State.tasks) groups[t.phase].push(t);
+  for (const k of Object.keys(groups)) {
+    groups[k].sort((a, b) => a.startDate.localeCompare(b.startDate) || a.id - b.id);
+  }
+
+  let html = '';
+  for (let p = 1; p <= 4; p++) {
+    const list = groups[p];
+    if (!list.length) continue;
+    const ph = PHASES[p];
+    // phase header row spans both columns
+    html += `
+      <div class="phase-row" style="grid-column: 1 / -1">
+        <span class="swatch" style="background:${ph.color}"></span>${ph.short}
+        <span class="count">${list.length} item${list.length === 1 ? '' : 's'}</span>
+      </div>`;
+    for (const t of list) {
+      html += renderTaskRowHtml(t, tlWidth);
+    }
+  }
+  host.innerHTML = html;
+
+  // attach event listeners after innerHTML
+  attachRowListeners();
+
+  // today overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'today-overlay';
+  overlay.style.width = tlWidth + 'px';
+  const today = isoToday();
+  if (today >= Layout.chartStart && today <= Layout.chartEnd) {
+    const x = dateToX(today);
+    overlay.innerHTML = `<div class="today-line" style="left:${x}px">
+        <div class="today-label">TODAY</div>
+      </div>`;
+  }
+  grid.appendChild(overlay);
+}
+
+function renderTaskRowHtml(t, tlWidth) {
+  const ph = PHASES[t.phase];
+  const ownersHtml = t.owners.map(o =>
+    `<span class="owner-chip" title="${OWNER_LABELS[o] || o}">${esc(o)}</span>`
+  ).join('');
+
+  // Show task dates in left panel meta line
+  let metaTxt;
+  if (t.type === 'milestone') {
+    metaTxt = fmtShort(t.startDate);
+  } else {
+    metaTxt = `${fmtShort(t.startDate)} – ${fmtShort(t.endDate)}`;
+  }
+
+  const statusHtml = `<button class="status-pill" data-s="${t.status}" data-id="${t.id}" aria-haspopup="menu"
+              title="Click to change status"><span class="dot"></span>${statusLabel(t.status)}</button>`;
+
+  const cell = `
+    <div class="task-cell" data-id="${t.id}" tabindex="0" role="button" aria-label="Edit ${esc(t.name)}">
+      <div class="task-name">
+        <div class="nm">${esc(t.name)}</div>
+        <div class="meta">${metaTxt}${t.percentComplete ? ` · ${t.percentComplete}%` : ''}</div>
+      </div>
+      ${statusHtml}
+      <div class="owners">${ownersHtml}</div>
+    </div>`;
+
+  // timeline row right column
+  const rowInner = renderBarHtml(t);
+  const row = `
+    <div class="timeline-row" data-id="${t.id}" style="width:${tlWidth}px">${rowInner}</div>`;
+
+  return cell + row;
+}
+
+function renderBarHtml(t) {
+  const ph = PHASES[t.phase];
+  const isCp = CP_SET.has(t.id);
+  const onCpAttr = isCp ? 'cp' : '';
+
+  if (t.type === 'milestone') {
+    const x = dateToX(t.startDate);
+    const filled = t.percentComplete >= 100;
+    const cls = `milestone ${filled ? '' : 'hollow'} ${onCpAttr}`;
+    const dateLabel = fmtShort(t.startDate);
+    return `
+      <div class="${cls}" data-id="${t.id}" tabindex="0" role="button"
+           aria-label="${esc(t.name)}, milestone ${dateLabel}${isCp ? ', critical path' : ''}"
+           style="left:${x}px; --bar-color:${ph.color}"></div>
+      <div class="milestone-label" style="left:${x}px">${dateLabel}</div>
+      ${renderBaselineForMilestone(t)}
+    `;
+  }
+
+  // duration or session-series
+  const x = dateToX(t.startDate);
+  const w = Math.max(1, daysBetween(t.startDate, t.endDate) + 1) * Layout.pxPerDay;
+  const pct = clamp(t.percentComplete, 0, 100);
+
+  const showLabel = w > 56;
+  const labelText = t.name;
+
+  return `
+    ${renderBaselineDuration(t, x)}
+    ${renderSlipTag(t, x, w)}
+    <div class="bar ${isCp ? 'cp' : ''}" data-id="${t.id}" tabindex="0" role="button"
+         aria-label="${esc(t.name)}, ${fmtFull(t.startDate)} to ${fmtFull(t.endDate)}, ${pct}% complete${isCp ? ', critical path' : ''}"
+         style="left:${x}px; width:${w}px; --bar-color:${ph.color}">
+      <div class="fill"><div class="body"></div><div class="progress" style="width:${pct}%"></div></div>
+      <div class="handle l" data-handle="l"></div>
+      <div class="handle r" data-handle="r"></div>
+      ${showLabel ? `<span class="label">${esc(labelText)}</span>` : ''}
+    </div>`;
+}
+
+function renderBaselineDuration(t, x) {
+  if (!t.baselineStart || !t.baselineEnd) return '';
+  if (t.baselineStart === t.startDate && t.baselineEnd === t.endDate) return '';
+  const bx = dateToX(t.baselineStart);
+  const bw = Math.max(1, daysBetween(t.baselineStart, t.baselineEnd) + 1) * Layout.pxPerDay;
+  return `<div class="baseline" style="left:${bx}px; width:${bw}px"></div>`;
+}
+
+function renderBaselineForMilestone(t) {
+  if (!t.baselineStart || t.baselineStart === t.startDate) return '';
+  const bx = dateToX(t.baselineStart);
+  return `<div class="baseline" style="left:${bx}px; width:8px"></div>`;
+}
+
+function renderSlipTag(t, x, w) {
+  if (!t.baselineEnd || t.baselineEnd === t.endDate) return '';
+  const slip = daysBetween(t.baselineEnd, t.endDate);
+  if (slip === 0) return '';
+  const cls = slip > 0 ? 'bad' : 'ok';
+  const word = slip > 0 ? `slipped ${slip}d` : `ahead ${-slip}d`;
+  return `<div class="slip-tag ${cls}" style="left:${x + w + 6}px">${word}</div>`;
+}
+
+function renderTodayLine() {
+  // Re-rendered as part of renderRows via overlay; nothing extra here.
+}
+
+function statusLabel(s) {
+  return s === 'on-track' ? 'On Track' : s === 'at-risk' ? 'At Risk' : 'Delayed';
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ─── 8. INTERACT ──────────────────────────────────────────────────────────
+
+function attachRowListeners() {
+  // task cell click → modal
+  document.querySelectorAll('.task-cell').forEach(cell => {
+    cell.addEventListener('click', (e) => {
+      // ignore clicks on status pill (handled separately)
+      if (e.target.closest('.status-pill')) return;
+      const id = Number(cell.dataset.id);
+      openModal(id);
+    });
+    cell.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openModal(Number(cell.dataset.id));
+      }
+    });
+  });
+
+  // status pill → menu
+  document.querySelectorAll('.status-pill').forEach(p => {
+    p.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openStatusMenu(p, Number(p.dataset.id));
+    });
+  });
+
+  // bars (drag move/resize, keyboard)
+  document.querySelectorAll('.bar').forEach(bar => {
+    bar.addEventListener('mousedown', barMouseDown);
+    bar.addEventListener('keydown', barKeyDown);
+    bar.addEventListener('dblclick', () => openModal(Number(bar.dataset.id)));
+  });
+  document.querySelectorAll('.milestone').forEach(ms => {
+    ms.addEventListener('mousedown', milestoneMouseDown);
+    ms.addEventListener('keydown', barKeyDown);
+    ms.addEventListener('dblclick', () => openModal(Number(ms.dataset.id)));
+  });
+}
+
+let drag = null;
+let dragTipEl = null;
+
+function ensureTip() {
+  if (!dragTipEl) {
+    dragTipEl = document.createElement('div');
+    dragTipEl.className = 'drag-tip';
+    document.getElementById('drag-tip-host').appendChild(dragTipEl);
+  }
+  return dragTipEl;
+}
+function hideTip() {
+  if (dragTipEl) { dragTipEl.remove(); dragTipEl = null; }
+}
+
+function barMouseDown(e) {
+  if (e.button !== 0) return;
+  const bar = e.currentTarget;
+  const id = Number(bar.dataset.id);
+  const t = State.tasks.find(x => x.id === id);
+  if (!t) return;
+
+  const handle = e.target.closest('.handle');
+  e.preventDefault();
+  drag = {
+    type: handle ? `resize-${handle.dataset.handle}` : 'move',
+    id, startMouseX: e.clientX,
+    startStart: t.startDate, startEnd: t.endDate
+  };
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup',   onDragUp);
+}
+
+function milestoneMouseDown(e) {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  const ms = e.currentTarget;
+  const id = Number(ms.dataset.id);
+  const t = State.tasks.find(x => x.id === id);
+  if (!t) return;
+  drag = {
+    type: 'move-milestone',
+    id, startMouseX: e.clientX,
+    startStart: t.startDate, startEnd: t.endDate
+  };
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup',   onDragUp);
+}
+
+function onDragMove(e) {
+  if (!drag) return;
+  const dx = e.clientX - drag.startMouseX;
+  const days = Math.round(dx / Layout.pxPerDay);
+  const t = State.tasks.find(x => x.id === drag.id);
+  if (!t) return;
+
+  if (drag.type === 'move' || drag.type === 'move-milestone') {
+    t.startDate = addDays(drag.startStart, days);
+    t.endDate   = addDays(drag.startEnd,   days);
+  } else if (drag.type === 'resize-l') {
+    const newStart = addDays(drag.startStart, days);
+    if (newStart <= t.endDate) t.startDate = newStart;
+  } else if (drag.type === 'resize-r') {
+    const newEnd = addDays(drag.startEnd, days);
+    if (newEnd >= t.startDate) t.endDate = newEnd;
+  }
+
+  // shift session dates if session-series being moved
+  if (drag.type === 'move' && t.type === 'session-series' && Array.isArray(t.sessions)) {
+    if (!drag.startSessions) drag.startSessions = t.sessions.map(s => ({ ...s }));
+    t.sessions = drag.startSessions.map(s => ({
+      ...s, date: s.date ? addDays(s.date, days) : null
+    }));
+  }
+
+  // tooltip
+  const tip = ensureTip();
+  tip.textContent = t.type === 'milestone'
+    ? fmtFull(t.startDate)
+    : `${fmtFull(t.startDate)} → ${fmtFull(t.endDate)} · ${daysBetween(t.startDate, t.endDate)+1}d`;
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top  = (e.clientY - 28) + 'px';
+
+  // light re-render of just this row would be ideal; full render is fast enough
+  renderRows();
+}
+
+function onDragUp() {
+  if (!drag) return;
+  drag = null;
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('mouseup',   onDragUp);
+  hideTip();
+  saveState();
+  render();
+}
+
+function barKeyDown(e) {
+  const id = Number(e.currentTarget.dataset.id);
+  const t = State.tasks.find(x => x.id === id);
+  if (!t) return;
+  let handled = true;
+  if (e.key === 'ArrowLeft' && !e.shiftKey) {
+    // shift start back by 1 day
+    t.startDate = addDays(t.startDate, -1);
+  } else if (e.key === 'ArrowRight' && !e.shiftKey) {
+    // shift start forward by 1 day, but never past end
+    const nextStart = addDays(t.startDate, 1);
+    if (t.type === 'milestone' || nextStart <= t.endDate) t.startDate = nextStart;
+  } else if (e.key === 'ArrowLeft' && e.shiftKey) {
+    // shift end back by 1 day, but never before start
+    const nextEnd = addDays(t.endDate, -1);
+    if (nextEnd >= t.startDate) t.endDate = nextEnd;
+  } else if (e.key === 'ArrowRight' && e.shiftKey) {
+    t.endDate = addDays(t.endDate, 1);
+  } else {
+    handled = false;
+  }
+
+  // for milestones, end follows start
+  if (t.type === 'milestone') t.endDate = t.startDate;
+
+  if (handled) {
+    e.preventDefault();
+    saveState();
+    render();
+    // restore focus to the (possibly new) bar
+    requestAnimationFrame(() => {
+      const next = document.querySelector(
+        t.type === 'milestone'
+          ? `.milestone[data-id="${id}"]`
+          : `.bar[data-id="${id}"]`
+      );
+      if (next) next.focus();
+    });
+  }
+}
+
+// status pill dropdown
+let statusMenuEl = null;
+function closeStatusMenu() {
+  if (statusMenuEl) { statusMenuEl.remove(); statusMenuEl = null; }
+  document.removeEventListener('click', closeStatusMenu, true);
+}
+function openStatusMenu(anchor, id) {
+  closeStatusMenu();
+  const t = State.tasks.find(x => x.id === id);
+  if (!t) return;
+  const m = document.createElement('div');
+  m.className = 'status-menu';
+  m.innerHTML = ['on-track', 'at-risk', 'delayed'].map(s => `
+    <button data-s="${s}">
+      <span class="status-pill" data-s="${s}" style="pointer-events:none">
+        <span class="dot"></span>${statusLabel(s)}
+      </span>
+    </button>
+  `).join('');
+  document.body.appendChild(m);
+  const r = anchor.getBoundingClientRect();
+  m.style.left = (r.left + window.scrollX) + 'px';
+  m.style.top  = (r.bottom + window.scrollY + 4) + 'px';
+  m.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    t.status = b.dataset.s;
+    closeStatusMenu();
+    saveState();
+    render();
+  });
+  statusMenuEl = m;
+  setTimeout(() => document.addEventListener('click', closeStatusMenu, true), 0);
+}
+
+// ─── 9. MODAL ─────────────────────────────────────────────────────────────
+
+let modalEditingId = null;
+
+function openModal(id) {
+  modalEditingId = id;
+  const dlg = document.getElementById('modal');
+  const isNew = id === null;
+  document.getElementById('modal-title').textContent = isNew ? 'Add task' : 'Edit task';
+  document.getElementById('modal-delete').style.visibility = isNew ? 'hidden' : 'visible';
+
+  let t;
+  if (isNew) {
+    // Pick the first phase that has any tasks (or 1)
+    const phaseUsed = [...new Set(State.tasks.map(x => x.phase))].sort()[0] || 1;
+    t = {
+      id: State.nextId,
+      name: '',
+      type: 'duration',
+      startDate: isoToday(),
+      endDate: addDays(isoToday(), 5),
+      owners: [],
+      phase: phaseUsed,
+      status: 'on-track',
+      percentComplete: 0,
+      baselineStart: '',
+      baselineEnd: '',
+      predecessors: [],
+      notes: ''
+    };
+  } else {
+    const src = State.tasks.find(x => x.id === id);
+    if (!src) return;
+    t = JSON.parse(JSON.stringify(src));
+  }
+
+  document.getElementById('f-name').value   = t.name;
+  document.getElementById('f-phase').value  = String(t.phase);
+  document.getElementById('f-type').value   = t.type;
+  document.getElementById('f-start').value  = t.startDate;
+  document.getElementById('f-end').value    = t.endDate;
+  document.getElementById('f-dur').value    = Math.max(0, daysBetween(t.startDate, t.endDate));
+  document.getElementById('f-status').value = t.status;
+
+  if (typeof dlg.showModal === 'function') {
+    dlg.showModal();
+  } else {
+    dlg.setAttribute('open', ''); // fallback for older browsers
+  }
+  setTimeout(() => document.getElementById('f-name').focus(), 0);
+}
+
+function closeModal() {
+  const dlg = document.getElementById('modal');
+  if (dlg.open) dlg.close();
+  modalEditingId = null;
+}
+
+function saveModal() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Task name is required.'); return; }
+  let start = document.getElementById('f-start').value;
+  let end   = document.getElementById('f-end').value;
+  const dur = Number(document.getElementById('f-dur').value);
+  const type = document.getElementById('f-type').value;
+
+  if (!start) { alert('Start date is required.'); return; }
+  if (type === 'milestone') {
+    end = start;
+  } else {
+    if (!end && Number.isFinite(dur)) end = addDays(start, dur);
+    if (!end) { alert('End date or duration is required.'); return; }
+    if (end < start) { alert('End date cannot be before start date.'); return; }
+  }
+
+  // Preserve fields the modal no longer edits (owners, %, baseline, preds, notes, sessions)
+  const existing = modalEditingId === null ? null : State.tasks.find(x => x.id === modalEditingId);
+
+  const data = {
+    name,
+    type,
+    phase: Number(document.getElementById('f-phase').value),
+    startDate: start,
+    endDate: end,
+    status: document.getElementById('f-status').value,
+    // Carry over from existing task or use sensible defaults for new tasks
+    owners:          existing ? existing.owners : [],
+    percentComplete: existing ? existing.percentComplete : 0,
+    baselineStart:   existing ? existing.baselineStart : start,
+    baselineEnd:     existing ? existing.baselineEnd : end,
+    predecessors:    existing ? existing.predecessors : [],
+    notes:           existing ? existing.notes : ''
+  };
+
+  if (modalEditingId === null) {
+    const t = normalizeTask({ id: State.nextId++, ...data });
+    State.tasks.push(t);
+    toast('Task added');
+  } else {
+    const t = State.tasks.find(x => x.id === modalEditingId);
+    if (!t) return;
+    // preserve sessions on session-series
+    const keepSessions = t.type === 'session-series' ? t.sessions : null;
+    Object.assign(t, normalizeTask({ id: t.id, ...data, sessions: keepSessions }));
+    toast('Task updated');
+  }
+  saveState();
+  closeModal();
+  render();
+}
+
+function deleteFromModal() {
+  if (modalEditingId === null) return;
+  if (!confirm('Delete this task?')) return;
+  State.tasks = State.tasks.filter(x => x.id !== modalEditingId);
+  // also remove from any predecessors list
+  for (const t of State.tasks) {
+    t.predecessors = t.predecessors.filter(p => p !== modalEditingId);
+  }
+  saveState();
+  closeModal();
+  render();
+  toast('Task deleted');
+}
+
+// ─── 10. EXPORT / IMPORT ──────────────────────────────────────────────────
+
+function exportCSV() {
+  const cols = ['id','name','phase','phaseName','type','startDate','endDate','owners',
+                'status','percentComplete','baselineStart','baselineEnd','predecessors',
+                'criticalPath','notes'];
+  const rows = [cols.join(',')];
+  for (const t of State.tasks) {
+    const row = [
+      t.id, t.name, t.phase, PHASES[t.phase].name, t.type, t.startDate, t.endDate,
+      t.owners.join('|'), t.status, t.percentComplete,
+      t.baselineStart, t.baselineEnd, t.predecessors.join('|'),
+      CP_SET.has(t.id) ? 'yes' : 'no', t.notes
+    ].map(csvCell).join(',');
+    rows.push(row);
+  }
+  download('pilot-rollout-tasks.csv', rows.join('\r\n'), 'text/csv');
+}
+function csvCell(v) {
+  const s = v == null ? '' : String(v);
+  if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportPDF() {
+  // window.print() honors the print stylesheet defined in the <style> block
+  window.print();
+}
+
+function download(name, body, mime) {
+  const blob = new Blob([body], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ─── 10b. SETTINGS (GitHub publishing) ───────────────────────────────────
+
+const SETTINGS_KEY = 'gantt_settings_v1';
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return { repoUrl: '', token: '' };
+    const parsed = JSON.parse(raw);
+    return {
+      repoUrl: String(parsed.repoUrl || ''),
+      token: String(parsed.token || '')
+    };
+  } catch (e) {
+    return { repoUrl: '', token: '' };
+  }
+}
+
+function saveSettings(s) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch (e) {
+    console.warn('[gantt] could not save settings:', e);
+    toast('Could not save settings');
+  }
+}
+
+function parseRepoUrl(url) {
+  // Accept https://github.com/owner/repo[.git][/]
+  const m = String(url || '').trim().match(/github\.com[\/:]([^\/]+)\/([^\/\s]+?)(?:\.git)?\/?$/);
+  if (!m) return null;
+  return { owner: m[1], repo: m[2] };
+}
+
+function openSettings() {
+  const dlg = document.getElementById('settings');
+  const s = loadSettings();
+  document.getElementById('s-repo').value = s.repoUrl;
+  document.getElementById('s-token').value = s.token;
+  updatePubStatus();
+  if (typeof dlg.showModal === 'function') dlg.showModal();
+  else dlg.setAttribute('open', '');
+  setTimeout(() => document.getElementById('s-repo').focus(), 0);
+}
+
+function closeSettings() {
+  const dlg = document.getElementById('settings');
+  if (dlg.open) dlg.close();
+}
+
+function updatePubStatus() {
+  const repo  = document.getElementById('s-repo').value.trim();
+  const token = document.getElementById('s-token').value.trim();
+  const pill  = document.getElementById('s-status');
+  if (!pill) return;
+  const ready = !!(repo && token && parseRepoUrl(repo));
+  pill.classList.toggle('ready', ready);
+  pill.querySelector('.label').textContent = ready
+    ? 'One-click publishing ready'
+    : 'Add repo URL and token to enable';
+}
+
+function saveSettingsFromModal() {
+  const repoUrl = document.getElementById('s-repo').value.trim();
+  const token   = document.getElementById('s-token').value.trim();
+  if (repoUrl && !parseRepoUrl(repoUrl)) {
+    alert('Repo URL must look like https://github.com/owner/repo');
+    return;
+  }
+  saveSettings({ repoUrl, token });
+  closeSettings();
+  toast('Settings saved');
+}
+
+function clearLocalDrafts() {
+  if (!confirm('Clear all local edits and restore defaults? Settings will be kept.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  seedState();
+  render();
+  toast('Local drafts cleared');
+}
+
+// ─── 10c. PUBLISH TO GITHUB ──────────────────────────────────────────────
+
+// Builds a publishable HTML snapshot: takes the current document, strips
+// any prior injected state script, and appends a new injection script
+// that pre-loads localStorage with the latest tasks/nextId so visitors
+// see exactly what the publisher saw.
+function buildPublishableHtml() {
+  const stateBlob = JSON.stringify({
+    version: 1, tasks: State.tasks, nextId: State.nextId
+  });
+  // Clone document to avoid mutating live page
+  const cloned = document.documentElement.cloneNode(true);
+  // Remove any previously-injected published-state script
+  const prior = cloned.querySelector('script#published-state');
+  if (prior) prior.remove();
+  // Defensively clear sensitive input values and open-dialog attrs
+  // (cloneNode copies attributes but NOT runtime .value; this belt-and-braces it)
+  cloned.querySelectorAll('input').forEach(inp => {
+    if (inp.type === 'password' || inp.id === 's-repo' || inp.id === 's-token') {
+      inp.removeAttribute('value');
+      inp.value = '';
+    }
+  });
+  cloned.querySelectorAll('dialog[open]').forEach(d => d.removeAttribute('open'));
+  // Append injection script at start of body so it runs before the main script
+  const body = cloned.querySelector('body');
+  const inject = cloned.ownerDocument.createElement('script');
+  inject.id = 'published-state';
+  // JSON.stringify of a JSON string safely embeds it as a JS string literal
+  inject.textContent =
+    `try{localStorage.setItem(${JSON.stringify(STORAGE_KEY)},${JSON.stringify(stateBlob)});}catch(e){}`;
+  body.insertBefore(inject, body.firstChild);
+  return '<!DOCTYPE html>\n<html lang="en">\n' + cloned.innerHTML + '\n</html>';
+}
+
+// Encode a UTF-8 string to base64 (handles non-ASCII safely)
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+async function publishToGitHub() {
+  const s = loadSettings();
+  if (!s.repoUrl || !s.token) {
+    toast('Open Settings to add your repo URL and token first');
+    openSettings();
+    return;
+  }
+  const parsed = parseRepoUrl(s.repoUrl);
+  if (!parsed) { toast('Repo URL is malformed — check Settings'); return; }
+  const { owner, repo } = parsed;
+
+  const btn = document.getElementById('btn-publish');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Publishing…';
+
+  try {
+    const path = 'index.html';
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+    // 1. GET current file SHA (if exists)
+    let sha = null;
+    try {
+      const head = await fetch(apiUrl, {
+        headers: {
+          'Authorization': 'token ' + s.token,
+          'Accept': 'application/vnd.github+json'
+        }
+      });
+      if (head.ok) {
+        const j = await head.json();
+        sha = j.sha;
+      } else if (head.status !== 404) {
+        const err = await head.json().catch(() => ({}));
+        throw new Error(err.message || ('GitHub API ' + head.status));
+      }
+    } catch (e) {
+      // If 404 (file not found yet), sha stays null and we'll create it
+      if (e.message && e.message.indexOf('not found') === -1) throw e;
+    }
+
+    // 2. Build HTML snapshot and PUT
+    const html = buildPublishableHtml();
+    const body = {
+      message: `Update plan from web app — ${new Date().toISOString()}`,
+      content: utf8ToBase64(html),
+      branch: 'main'
+    };
+    if (sha) body.sha = sha;
+
+    const put = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + s.token,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!put.ok) {
+      const err = await put.json().catch(() => ({}));
+      throw new Error(err.message || ('GitHub API ' + put.status));
+    }
+
+    toast('Published! GitHub Pages will refresh in ~30–60 seconds');
+  } catch (e) {
+    console.error('[publish] failed:', e);
+    toast('Publish failed: ' + (e.message || 'unknown error'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+// ─── 11. PASSWORD GATE ────────────────────────────────────────────────────
+
+async function runGate() {
+  const gate = document.getElementById('gate');
+  const app  = document.getElementById('app');
+  if (!ENABLE_PASSWORD_GATE) {
+    gate.hidden = true;
+    return true;
+  }
+  app.style.display = 'none';
+  gate.hidden = false;
+  return new Promise(resolve => {
+    const input = document.getElementById('gate-input');
+    const err   = document.getElementById('gate-err');
+    const go    = document.getElementById('gate-go');
+    const tryUnlock = async () => {
+      err.textContent = '';
+      const buf = new TextEncoder().encode(input.value);
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      const hex = [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+      if (hex === PASSWORD_HASH) {
+        gate.hidden = true; app.style.display = '';
+        resolve(true);
+      } else {
+        err.textContent = 'Incorrect password';
+        input.select();
+      }
+    };
+    go.addEventListener('click', tryUnlock);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+    setTimeout(() => input.focus(), 0);
+  });
+}
+
+// ─── Toasts ───────────────────────────────────────────────────────────────
+
+function toast(msg) {
+  const host = document.getElementById('toast-host');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 2400);
+}
+
+// ─── 12. INIT ─────────────────────────────────────────────────────────────
+
+function bindToolbar() {
+  document.getElementById('btn-add').addEventListener('click',   () => openModal(null));
+  document.getElementById('btn-publish').addEventListener('click', publishToGitHub);
+  document.getElementById('btn-csv').addEventListener('click',   exportCSV);
+  document.getElementById('btn-pdf').addEventListener('click',   exportPDF);
+  document.getElementById('btn-reset').addEventListener('click', resetState);
+  document.getElementById('btn-settings').addEventListener('click', openSettings);
+}
+
+function bindSettingsModal() {
+  const dlg = document.getElementById('settings');
+  document.getElementById('s-close').addEventListener('click', closeSettings);
+  document.getElementById('s-cancel').addEventListener('click', closeSettings);
+  document.getElementById('s-save').addEventListener('click', saveSettingsFromModal);
+  document.getElementById('s-clear-drafts').addEventListener('click', clearLocalDrafts);
+  document.getElementById('s-repo').addEventListener('input', updatePubStatus);
+  document.getElementById('s-token').addEventListener('input', updatePubStatus);
+  dlg.addEventListener('cancel', e => { e.preventDefault(); closeSettings(); });
+  dlg.addEventListener('click', e => {
+    const r = dlg.getBoundingClientRect();
+    const inside = e.clientX >= r.left && e.clientX <= r.right
+                && e.clientY >= r.top  && e.clientY <= r.bottom;
+    if (!inside) closeSettings();
+  });
+}
+
+function bindModal() {
+  const dlg = document.getElementById('modal');
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-save').addEventListener('click', saveModal);
+  document.getElementById('modal-delete').addEventListener('click', deleteFromModal);
+
+  // When start or duration changes, recompute end
+  const fStart = document.getElementById('f-start');
+  const fEnd   = document.getElementById('f-end');
+  const fDur   = document.getElementById('f-dur');
+  fStart.addEventListener('change', () => {
+    if (!fStart.value) return;
+    if (fEnd.value && fEnd.value < fStart.value) fEnd.value = fStart.value;
+    fDur.value = fEnd.value ? Math.max(0, daysBetween(fStart.value, fEnd.value)) : 0;
+  });
+  fEnd.addEventListener('change', () => {
+    if (fStart.value && fEnd.value < fStart.value) fEnd.value = fStart.value;
+    if (fStart.value && fEnd.value) fDur.value = Math.max(0, daysBetween(fStart.value, fEnd.value));
+  });
+  fDur.addEventListener('change', () => {
+    const d = Number(fDur.value);
+    if (Number.isFinite(d) && fStart.value) fEnd.value = addDays(fStart.value, d);
+  });
+
+  // type change — milestones force end=start
+  document.getElementById('f-type').addEventListener('change', e => {
+    if (e.target.value === 'milestone') {
+      fEnd.value = fStart.value;
+      fDur.value = 0;
+    }
+  });
+
+  // ESC closes — native <dialog> handles it; we close on cancel event
+  dlg.addEventListener('cancel', e => { e.preventDefault(); closeModal(); });
+
+  // Click backdrop to close
+  dlg.addEventListener('click', e => {
+    const r = dlg.getBoundingClientRect();
+    const inside = e.clientX >= r.left && e.clientX <= r.right
+                && e.clientY >= r.top  && e.clientY <= r.bottom;
+    if (!inside) closeModal();
+  });
+}
+
+let resizeTimer = null;
+function onResize() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    fitPxPerDay();
+    render();
+  }, 120);
+}
+
+async function init() {
+  const ok = await runGate();
+  if (!ok) return;
+  loadState();
+  bindToolbar();
+  bindModal();
+  bindSettingsModal();
+  window.addEventListener('resize', onResize);
+  render();
+}
+
+// kick off
+document.addEventListener('DOMContentLoaded', () => {
+  init().catch(err => {
+    console.error('Init error:', err);
+    document.body.innerHTML = '<pre style="padding:24px;color:#900">Error initialising plan: ' + esc(String(err)) + '</pre>';
+  });
+});
+
+// expose for inline onclick (empty state)
+window.openModal = openModal;
+
+</script>
+</body>
+</html>
